@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mock Interview Coach (PrepPal)</title>
+<!-- Optional: used only to draw A2UI Icon components. If it can't load (offline/
+     corp network), icons fall back to showing their name as text. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
+<!-- Markdown & Syntax Highlighting -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  :root {
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-light: #e0e7ff;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --border: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-muted: #64748b;
+    --user-bubble: #6366f1;
+    --agent-bubble: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  header {
+    background: #ffffff;
+    color: var(--text-primary);
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .header-badge {
+    background: var(--accent);
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .header-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .header-status {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: #10b981;
+    font-weight: 500;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+  }
+
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem 1rem;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  /* Dialogue row styling */
+  .dialogue-turn {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .dialogue-turn.user {
+    flex-direction: row-reverse;
+  }
+  .dialogue-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .dialogue-turn.agent .dialogue-avatar {
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid #c7d2fe;
+  }
+  .dialogue-turn.user .dialogue-avatar {
+    background: #e2e8f0;
+    color: #475569;
+  }
+
+  .dialogue-body {
+    display: flex;
+    flex-direction: column;
+    max-width: 82%;
+  }
+  .dialogue-turn.user .dialogue-body {
+    align-items: flex-end;
+  }
+
+  .dialogue-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .dialogue-name {
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .bubble {
+    display: inline-block;
+    padding: 0.8rem 1.1rem;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    text-align: left;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .dialogue-turn.agent .bubble {
+    background: var(--agent-bubble);
+    border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+    color: var(--text-primary);
+  }
+  .dialogue-turn.user .bubble {
+    background: var(--user-bubble);
+    color: #ffffff;
+    border-top-right-radius: 4px;
+    white-space: pre-wrap;
+  }
+  .bubble.rich {
+    background: transparent;
+    border: none;
+    padding: 0;
+    max-width: 100%;
+    white-space: normal;
+    box-shadow: none;
+  }
+
+  /* Markdown body inside agent bubbles */
+  .agent-content p { margin: 0 0 0.6rem 0; }
+  .agent-content p:last-child { margin-bottom: 0; }
+  .agent-content ul, .agent-content ol { margin: 0.4rem 0 0.6rem 1.2rem; padding: 0; }
+  .agent-content li { margin-bottom: 0.25rem; }
+  .agent-content pre {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.75rem;
+    overflow-x: auto;
+    font-size: 0.88rem;
+    margin: 0.5rem 0;
+  }
+  .agent-content code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.88em;
+  }
+  .agent-content :not(pre) > code {
+    background: #e2e8f0;
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+    color: #0f172a;
+  }
+
+  /* Animated typing indicator */
+  .typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0.4rem 0.2rem;
+  }
+  .typing-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    opacity: 0.4;
+    animation: typingPulse 1.4s infinite ease-in-out;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingPulse {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  /* New Session button in header */
+  .header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .btn-new-session {
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.15s ease;
+  }
+  .btn-new-session:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+  }
+
+  /* Suggestions row */
+  .suggestions-wrapper {
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0.5rem 1rem 0;
+  }
+  .suggestions {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+  .chip {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.82rem;
+    color: #334155;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    transition: all 0.15s ease;
+  }
+  .chip:hover {
+    background: var(--accent-light);
+    border-color: #c7d2fe;
+    color: var(--accent-hover);
+    transform: translateY(-1px);
+  }
+
+  /* Form & Input */
+  .input-container {
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0.6rem 1rem 1.2rem;
+  }
+  form {
+    display: flex;
+    gap: 0.6rem;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.4rem 0.5rem 0.4rem 0.8rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    transition: border-color 0.15s ease;
+  }
+  form:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+  }
+  input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    background: transparent;
+  }
+  button {
+    padding: 0.65rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button:hover {
+    background: var(--accent-hover);
+  }
+
+  /* --- A2UI component styles --- */
+  .a2card {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem;
+    background: #ffffff;
+    box-shadow: 0 2px 5px rgba(0,0,0,.04);
+    max-width: 100%;
+  }
+  .a2card + .a2card, .a2col > .a2card { margin-top: .6rem; }
+  .a2col { display: flex; flex-direction: column; gap: .4rem; }
+  .a2row { display: flex; flex-direction: row; gap: .6rem; align-items: center; flex-wrap: wrap; }
+  .a2row.between { justify-content: space-between; }
+  .a2text { margin: 0; line-height: 1.45; }
+  .a2text.a2-h1 { font-size: 1.4rem; font-weight: 700; color: #0f172a; }
+  .a2text.a2-h2 { font-size: 1.2rem; font-weight: 700; color: #1e293b; }
+  .a2text.a2-h3 { font-size: 1.05rem; font-weight: 600; color: #334155; }
+  .a2text.a2-h4 { font-size: 0.95rem; font-weight: 600; }
+  .a2text.a2-caption { font-size: 0.82rem; color: #64748b; }
+  .a2divider { border: none; border-top: 1px solid var(--border); margin: .5rem 0; width: 100%; }
+  .a2img { max-width: 100%; border-radius: 10px; display: block; }
+  .material-symbols-outlined { font-family: 'Material Symbols Outlined'; font-size: 1.25rem; line-height: 1; vertical-align: middle; color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-brand">
+    <div class="header-badge">🎯</div>
+    <div class="header-title">Mock Interview Coach (PrepPal)</div>
+  </div>
+  <div class="header-actions">
+    <button id="btnNewSession" class="btn-new-session" title="Start a fresh interview session">🔄 New Session</button>
+    <div class="header-status">
+      <span class="status-dot"></span> Online
+    </div>
+  </div>
+</header>
+<div id="log"></div>
+<div class="suggestions-wrapper">
+  <div class="suggestions">
+    <button type="button" class="chip" data-prompt="Let's start a Senior Android Technical interview">📱 Android Technical (Senior)</button>
+    <button type="button" class="chip" data-prompt="Let's do a System Design interview for an Offline-First Sync Engine">⚙️ System Design: Sync Engine</button>
+    <button type="button" class="chip" data-prompt="Show my past interview sessions and scorecards">📊 View Past Sessions</button>
+  </div>
+</div>
+<div class="input-container">
+  <form id="form">
+    <input id="input" placeholder="Type your interview response or ask a question…" autocomplete="off" autofocus>
+    <button>Send</button>
+  </form>
+</div>
+
+<script>
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+function bubble(who) {
+  const turn = el("div", "dialogue-turn " + who);
+  const avatar = el("div", "dialogue-avatar", who === "agent" ? "🤖" : "👤");
+  const body = el("div", "dialogue-body");
+
+  const meta = el("div", "dialogue-meta");
+  const name = el("span", "dialogue-name", who === "agent" ? "PrepPal Coach" : "You");
+  const now = new Date();
+  const time = el("span", "dialogue-time", now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  meta.appendChild(name);
+  meta.appendChild(time);
+  body.appendChild(meta);
+
+  const b = el("div", "bubble");
+  body.appendChild(b);
+
+  turn.appendChild(avatar);
+  turn.appendChild(body);
+  log.appendChild(turn);
+  log.scrollTop = log.scrollHeight;
+  return b;
+}
+
+/* ----------------------------------------------------------------------------
+ * A2UI mini-renderer (v0.8 Basic Catalog subset).
+ * Renders Card / Column / Row / Text / Divider / List / Image / Icon.
+ * Anything else falls back to plain text (see renderReply). All text goes in via
+ * textContent and image URLs are validated, so agent output can't inject HTML.
+ * -------------------------------------------------------------------------- */
+
+// A "bound value" is usually {literalString: "..."}; we only support literals.
+function boundStr(v) {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v.literalString === "string") return v.literalString;
+  return "";
+}
+
+// child ids of a component's props: single `child` and/or `children.explicitList`.
+function childIds(props) {
+  const ids = [];
+  if (props && typeof props.child === "string") ids.push(props.child);
+  const ch = props && props.children;
+  if (ch && Array.isArray(ch.explicitList)) for (const c of ch.explicitList) if (typeof c === "string") ids.push(c);
+  return ids;
+}
+
+// A2UI icon names are camelCase (locationOn); Material Symbols wants snake_case.
+function iconName(n) { return String(n || "").replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\s+/g, "_").toLowerCase(); }
+
+function buildNode(id, comps, seen) {
+  if (!id || seen.has(id)) return null;   // missing / cycle guard
+  seen.add(id);
+  const spec = comps[id];
+  if (!spec || typeof spec !== "object") return null;
+  const type = Object.keys(spec)[0];
+  const props = spec[type] || {};
+  const kids = () => childIds(props).map(cid => buildNode(cid, comps, seen)).filter(Boolean);
+
+  switch (type) {
+    case "Card": {
+      const d = el("div", "a2card"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Column":
+    case "List": {
+      const horizontal = type === "List" && props.direction === "horizontal";
+      const d = el("div", horizontal ? "a2row" : "a2col"); kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Row": {
+      const d = el("div", "a2row" + (props.distribution === "spaceBetween" ? " between" : ""));
+      kids().forEach(n => d.appendChild(n)); return d;
+    }
+    case "Text": {
+      const t = el("div", "a2text");
+      const hint = String(props.usageHint || "body").toLowerCase();
+      if (["h1", "h2", "h3", "h4", "h5", "h6"].includes(hint)) t.classList.add("a2-" + hint);
+      else if (hint === "caption") t.classList.add("a2-caption");
+      t.textContent = boundStr(props.text);
+      return t;
+    }
+    case "Divider":
+      return el("hr", "a2divider");
+    case "Image": {
+      const src = boundStr(props.url || props.src);
+      if (!/^https?:\/\//i.test(src)) return null;   // only allow safe URLs
+      const img = el("img", "a2img"); img.src = src; img.alt = boundStr(props.alt) || ""; return img;
+    }
+    case "Icon": {
+      const s = el("span", "material-symbols-outlined"); s.textContent = iconName(boundStr(props.name) || props.name); return s;
+    }
+    default:
+      return null;   // unknown component -> skipped (text fallback covers content)
+  }
+}
+
+// Render one or more A2UI messages (beginRendering + surfaceUpdate) into `container`.
+// Returns true if anything was drawn.
+function renderSurface(messages, container) {
+  const comps = {};
+  const roots = [];
+  for (const m of messages) {
+    if (m.beginRendering && typeof m.beginRendering.root === "string") roots.push(m.beginRendering.root);
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.id && c.component) comps[c.id] = c.component;
+  }
+  let rootIds = roots.filter(r => comps[r]);
+  if (rootIds.length === 0) {   // no valid root given -> infer un-referenced components
+    const referenced = new Set();
+    for (const id in comps) { const spec = comps[id]; childIds(spec[Object.keys(spec)[0]] || {}).forEach(c => referenced.add(c)); }
+    rootIds = Object.keys(comps).filter(id => !referenced.has(id));
+  }
+  let drew = false;
+  for (const rid of rootIds) { const node = buildNode(rid, comps, new Set()); if (node) { container.appendChild(node); drew = true; } }
+  return drew;
+}
+
+// Fallback: pull every Text value out of the messages as plain text.
+function flattenText(messages) {
+  const out = [];
+  for (const m of messages) {
+    const su = m.surfaceUpdate;
+    if (su && Array.isArray(su.components)) for (const c of su.components) if (c && c.component && c.component.Text) out.push(boundStr(c.component.Text.text));
+  }
+  return out.join("\n").trim();
+}
+
+function renderReply(b, parts) {
+  b.innerHTML = "";   // clear typing indicator
+  const texts = parts.filter(p => p && (p.kind === "text" || (!p.kind && p.text))).map(p => p.text || "");
+  const a2ui = parts.filter(p => p && p.kind === "a2ui" && p.data).map(p => p.data);
+
+  const textStr = texts.join("\n").trim();
+  if (textStr) {
+    const textWrapper = el("div", "agent-content");
+    try {
+      if (window.marked) {
+        textWrapper.innerHTML = marked.parse(textStr, {
+          breaks: true,
+          gfm: true
+        });
+        if (window.hljs) {
+          textWrapper.querySelectorAll("pre code").forEach(block => {
+            hljs.highlightElement(block);
+          });
+        }
+      } else {
+        textWrapper.textContent = textStr;
+      }
+    } catch {
+      textWrapper.textContent = textStr;
+    }
+    b.appendChild(textWrapper);
+  }
+
+  if (a2ui.length) {
+    b.classList.add("rich");
+    if (!renderSurface(a2ui, b)) b.appendChild(el("div", null, flattenText(a2ui) || "(no card content)"));
+  }
+  if (!b.childNodes.length) b.textContent = "(no response)";
+  log.scrollTop = log.scrollHeight;
+}
+
+// Stable user_id per browser via localStorage
+let userId = localStorage.getItem("preppal_user_id");
+if (!userId) {
+  userId = "user_" + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 10));
+  localStorage.setItem("preppal_user_id", userId);
+}
+
+function showTypingIndicator(b) {
+  b.innerHTML = `
+    <div class="typing-indicator" title="PrepPal is reviewing your answer...">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  `;
+}
+
+async function sendMessage(text) {
+  if (!text) return;
+  bubble("user").textContent = text;
+  input.value = "";
+  const b = bubble("agent");
+  showTypingIndicator(b);
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, user_id: userId })
+    });
+    const raw = await res.text();
+    let data;
+    try { data = JSON.parse(raw); }
+    catch { throw new Error(`Server returned non-JSON (HTTP ${res.status}). ${raw.slice(0, 300)}`); }
+    renderReply(b, data.parts || []);
+  } catch (e) {
+    b.textContent = "Error: " + e.message;
+  }
+}
+
+// Clickable example prompt chips
+document.querySelectorAll(".chip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const promptText = btn.getAttribute("data-prompt");
+    if (promptText) sendMessage(promptText);
+  });
+});
+
+// New Session: Clear chat log and start fresh conversation
+const btnNewSession = document.getElementById("btnNewSession");
+if (btnNewSession) {
+  btnNewSession.addEventListener("click", () => {
+    if (confirm("Start a new interview session?")) {
+      log.innerHTML = "";
+      sendMessage("Hi, let's start a new interview session!");
+    }
+  });
+}
+
+// Form submission handler
+form.addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const text = input.value.trim();
+  sendMessage(text);
+});
+</script>
+</body>
+</html>
